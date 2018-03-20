@@ -133,7 +133,7 @@ def train(train_image_paths, train_mask_paths, val_image_path, val_mask_path, lr
         with tf.Session() as sess:
             print('Training with learning rate: ', lr)
             if FINETUNE:
-                saver.restore(sess, MODEL + 'model.ckpt-50')
+                saver.restore(sess, tf.train.latest_checkpoint(MODEL))
             else:
                 sess.run(tf.global_variables_initializer())
             for epoch in range(0, EPOCHS):
@@ -189,7 +189,7 @@ def infer(image_paths):
 
     saver = tf.train.Saver()
     with tf.Session() as sess:
-        saver.restore(sess, 'model/model.ckpt-47')
+        saver.restore(sess, tf.train.latest_checkpoint(MODEL))
 
         for i, image_path in enumerate(image_paths):
             image = cv2.imread(image_path, 1)
@@ -208,7 +208,7 @@ def infer(image_paths):
 
 
 if __name__ == '__main__':
-    '''
+
     image_paths = [os.path.join(os.getcwd(), IMAGE_PATHS,
                                 x) for x in os.listdir(IMAGE_PATHS) if x.endswith('.png')]
     mask_paths = [os.path.join(os.getcwd(), MASK_PATHS, 'mask-' + os.path.basename(x))
@@ -222,10 +222,10 @@ if __name__ == '__main__':
     random.shuffle(indexes)
     image_paths = [image_paths[index] for index in indexes]
     mask_paths = [mask_paths[index] for index in indexes]
-    '''
-    infer_paths = ['test_image_modded/' + x for x in os.listdir(
-        'test_image_modded') if x.endswith('.jpg')]
-    print(infer_paths)
-    infer(infer_paths)
-    #print('Training inititated...')
-    #train(image_paths, mask_paths, val_image_paths, val_mask_paths)
+
+    #infer_paths = ['test_image_modded/' + x for x in os.listdir(
+    #    'test_image_modded') if x.endswith('.jpg')]
+    #print(infer_paths)
+    #infer(infer_paths)
+    print('Training inititated...')
+    train(image_paths, mask_paths, val_image_paths, val_mask_paths)
