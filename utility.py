@@ -93,6 +93,20 @@ def _parse_data(image_paths, mask_paths):
     return images, masks
 
 
+def _resize_with_expand(image, mask):
+    """Resize images and masks"""
+    image = tf.expand_dims(image, axis=0)
+    mask = tf.expand_dims(mask, axis=0)
+
+    image = tf.image.resize_images(image, [480, 640])
+    mask = tf.image.resize_images(mask, [480, 640])
+
+    image = tf.squeeze(image, axis=0)
+    mask = tf.squeeze(mask, axis=0)
+
+    return image, mask
+
+
 def data_batch(image_paths, mask_paths, augment=False, batch_size=4, num_threads=2):
     """Reads data, normalizes it, shuffles it, then batches it, returns a
        the next element in dataset op and the dataset initializer op.
@@ -139,11 +153,12 @@ def data_batch(image_paths, mask_paths, augment=False, batch_size=4, num_threads
         data = data.map(_flip_left_right,
                         num_parallel_calls=num_threads).prefetch(30)
 
+    # Resize first to later batch
+    data = data.map(_resize_with_expand,
+                    num_parallel_calls=num_threads).prefetch(30)
+
     # Batch the data
     data = data.batch(batch_size)
-
-    # Resize to smaller dims for speed
-    data = data.map(_resize_data, num_parallel_calls=num_threads).prefetch(30)
 
     # Normalize
     data = data.map(_normalize_data,
